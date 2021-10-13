@@ -57,7 +57,7 @@ function run() {
             // TODO: Checkout specific tag
             const actionDefinitionPath = path.join(localPath, "action.yml");
             const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }));
-            const executable = actionDefinition.runs.using;
+            const executable = actionDefinition.runs.using === 'node12' ? 'node' : actionDefinition.runs.using;
             const mainFile = actionDefinition.runs.main;
             // TODO: Process inputs, outputs, state
             if (sudo) {

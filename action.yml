@@ -8,6 +8,10 @@ inputs:
   token:
     required: false
     description: 'The token used to access the action if private'
+  sudo:
+    required: false
+    description: 'Use sudo on Linux and MacOS'
+    default: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
