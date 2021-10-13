@@ -23,3 +23,5 @@ jobs:
         with:
           action: dhadka/print-env
           token: ${{ secrets.PAT }}
+          sandbox: |
+            network: none

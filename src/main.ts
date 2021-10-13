@@ -10,7 +10,9 @@ async function run(): Promise<void> {
   const action = core.getInput('action')
   const token = core.getInput('token')
   const sandbox = core.getInput('sandbox')
-  const sudo = core.getInput('sudo') === 'true' && os.platform() !== 'win32'
+  const sudo = core.getInput('sudo') === 'true'
+
+  let execArgs = []
 
   const localPath = crypto.randomBytes(20).toString('hex')
 
@@ -23,12 +25,14 @@ async function run(): Promise<void> {
     await exec.exec('git', ['clone', repoUrl, localPath])
 
     // TODO: Checkout specific tag
-    
-    const actionDefinitionPath = path.join(localPath, "action.yml")
-    const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }))
 
-    const executable = actionDefinition.runs.using === 'node12' ? 'node' : actionDefinition.runs.using
-    const mainFile = actionDefinition.runs.main
+    if (sudo) {
+      if (os.platform() === 'win32') {
+        core.info("Sudo not available on Windows.")
+      } else {
+        execArgs.push('sudo')
+      }
+    }
 
     if (sandbox) {
       if (os.platform() !== 'linux') {
@@ -38,15 +42,28 @@ async function run(): Promise<void> {
 
       // TODO: This should be done in a pre step
       await exec.exec('sudo', ['apt-get', 'install', 'firejail'])
+
+      execArgs.push('firejail')
+
+      const sandboxYml = yaml.parse(sandbox)
+
+      if (sandboxYml.network) {
+        execArgs.push(`--net=${sandboxYml.network}`)
+      }
     }
+
+    const actionDefinitionPath = path.join(localPath, "action.yml")
+    const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }))
+
+    const executable = actionDefinition.runs.using === 'node12' ? 'node' : actionDefinition.runs.using
+    const mainFile = actionDefinition.runs.main
+
+    execArgs.push(executable)
+    execArgs.push(path.join(localPath, mainFile))
 
     // TODO: Process inputs, outputs, state
 
-    if (sudo) {
-      await exec.exec('sudo', [executable, path.join(localPath, mainFile)])
-    } else {
-      await exec.exec(executable, [path.join(localPath, mainFile)])
-    }
+    await exec.exec(execArgs[0], execArgs.slice(1))
 
     // TODO: Add support for pre and post steps
     // TODO: Add support for containers and composite actions?

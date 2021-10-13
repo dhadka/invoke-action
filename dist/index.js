@@ -47,7 +47,8 @@ function run() {
         const action = core.getInput('action');
         const token = core.getInput('token');
         const sandbox = core.getInput('sandbox');
-        const sudo = core.getInput('sudo') === 'true' && os.platform() !== 'win32';
+        const sudo = core.getInput('sudo') === 'true';
+        let execArgs = [];
         const localPath = crypto.randomBytes(20).toString('hex');
         if (token) {
             core.setSecret(token);
@@ -56,10 +57,14 @@ function run() {
             const repoUrl = token ? `https://${token}@github.com/${action}` : `https://github.com/${action}`;
             yield exec.exec('git', ['clone', repoUrl, localPath]);
             // TODO: Checkout specific tag
-            const actionDefinitionPath = path.join(localPath, "action.yml");
-            const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }));
-            const executable = actionDefinition.runs.using === 'node12' ? 'node' : actionDefinition.runs.using;
-            const mainFile = actionDefinition.runs.main;
+            if (sudo) {
+                if (os.platform() === 'win32') {
+                    core.info("Sudo not available on Windows.");
+                }
+                else {
+                    execArgs.push('sudo');
+                }
+            }
             if (sandbox) {
                 if (os.platform() !== 'linux') {
                     core.error('Sandbox is only supported on Linux');
@@ -67,14 +72,20 @@ function run() {
                 }
                 // TODO: This should be done in a pre step
                 yield exec.exec('sudo', ['apt-get', 'install', 'firejail']);
+                execArgs.push('firejail');
+                const sandboxYml = yaml.parse(sandbox);
+                if (sandboxYml.network) {
+                    execArgs.push(`--net=${sandboxYml.network}`);
+                }
             }
+            const actionDefinitionPath = path.join(localPath, "action.yml");
+            const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }));
+            const executable = actionDefinition.runs.using === 'node12' ? 'node' : actionDefinition.runs.using;
+            const mainFile = actionDefinition.runs.main;
+            execArgs.push(executable);
+            execArgs.push(path.join(localPath, mainFile));
             // TODO: Process inputs, outputs, state
-            if (sudo) {
-                yield exec.exec('sudo', [executable, path.join(localPath, mainFile)]);
-            }
-            else {
-                yield exec.exec(executable, [path.join(localPath, mainFile)]);
-            }
+            yield exec.exec(execArgs[0], execArgs.slice(1));
             // TODO: Add support for pre and post steps
             // TODO: Add support for containers and composite actions?
         }
