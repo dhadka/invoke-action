@@ -12,19 +12,30 @@ async function run(): Promise<void> {
   const sandbox = core.getInput('sandbox')
   const sudo = core.getInput('sudo') === 'true'
 
-  let execArgs = []
-
+  const execArgs = []
   const localPath = crypto.randomBytes(20).toString('hex')
 
   if (token) {
     core.setSecret(token)
   }
 
+  let repo = action
+  let ref = undefined
+
+  if (action.indexOf('@') >= 0) {
+    const actionParts = action.split('@')
+
+    repo = actionParts[0]
+    ref = actionParts.splice(1).join('@')
+  }
+
   try {
-    const repoUrl = token ? `https://${token}@github.com/${action}` : `https://github.com/${action}`
+    const repoUrl = token ? `https://${token}@github.com/${repo}` : `https://github.com/${repo}`
     await exec.exec('git', ['clone', repoUrl, localPath])
 
-    // TODO: Checkout specific tag
+    if (ref) {
+      await exec.exec('git', ['checkout', ref])
+    }
 
     if (sudo) {
       if (os.platform() === 'win32') {
@@ -40,8 +51,7 @@ async function run(): Promise<void> {
         return
       }
 
-      // TODO: This should be done in a pre step
-      await exec.exec('sudo', ['apt-get', 'install', 'firejail'])
+      await exec.exec('sudo', ['apt-get', 'install', 'firejail']) // TODO: Move to pre step and only run once
 
       execArgs.push('firejail')
 
@@ -50,6 +60,8 @@ async function run(): Promise<void> {
       if (sandboxYml.network) {
         execArgs.push(`--net=${sandboxYml.network}`)
       }
+
+      // TODO: sandbox file system
     }
 
     const actionDefinitionPath = path.join(localPath, "action.yml")

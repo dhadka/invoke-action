@@ -48,15 +48,24 @@ function run() {
         const token = core.getInput('token');
         const sandbox = core.getInput('sandbox');
         const sudo = core.getInput('sudo') === 'true';
-        let execArgs = [];
+        const execArgs = [];
         const localPath = crypto.randomBytes(20).toString('hex');
         if (token) {
             core.setSecret(token);
         }
+        let repo = action;
+        let ref = undefined;
+        if (action.indexOf('@') >= 0) {
+            const actionParts = action.split('@');
+            repo = actionParts[0];
+            ref = actionParts.splice(1).join('@');
+        }
         try {
-            const repoUrl = token ? `https://${token}@github.com/${action}` : `https://github.com/${action}`;
+            const repoUrl = token ? `https://${token}@github.com/${repo}` : `https://github.com/${repo}`;
             yield exec.exec('git', ['clone', repoUrl, localPath]);
-            // TODO: Checkout specific tag
+            if (ref) {
+                yield exec.exec('git', ['checkout', ref]);
+            }
             if (sudo) {
                 if (os.platform() === 'win32') {
                     core.info("Sudo not available on Windows.");
@@ -70,13 +79,13 @@ function run() {
                     core.error('Sandbox is only supported on Linux');
                     return;
                 }
-                // TODO: This should be done in a pre step
-                yield exec.exec('sudo', ['apt-get', 'install', 'firejail']);
+                yield exec.exec('sudo', ['apt-get', 'install', 'firejail']); // TODO: Move to pre step and only run once
                 execArgs.push('firejail');
                 const sandboxYml = yaml.parse(sandbox);
                 if (sandboxYml.network) {
                     execArgs.push(`--net=${sandboxYml.network}`);
                 }
+                // TODO: sandbox file system
             }
             const actionDefinitionPath = path.join(localPath, "action.yml");
             const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }));
