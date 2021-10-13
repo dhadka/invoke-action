@@ -12,6 +12,9 @@ inputs:
     required: false
     description: 'Use sudo on Linux and MacOS'
     default: false
+  sandbox:
+    required: false
+    description: 'Run action in a sandbox with restricted network and file access'
 runs:
   using: 'node12'
   main: 'dist/index.js'

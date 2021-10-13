@@ -9,6 +9,7 @@ import * as exec from '@actions/exec'
 async function run(): Promise<void> {
   const action = core.getInput('action')
   const token = core.getInput('token')
+  const sandbox = core.getInput('sandbox')
   const sudo = core.getInput('sudo') === 'true' && os.platform() !== 'win32'
 
   const localPath = crypto.randomBytes(20).toString('hex')
@@ -28,6 +29,16 @@ async function run(): Promise<void> {
 
     const executable = actionDefinition.runs.using === 'node12' ? 'node' : actionDefinition.runs.using
     const mainFile = actionDefinition.runs.main
+
+    if (sandbox) {
+      if (os.platform() !== 'linux') {
+        core.error('Sandbox is only supported on Linux')
+        return
+      }
+
+      // TODO: This should be done in a pre step
+      await exec.exec('sudo', ['apt-get', 'install', 'firejail'])
+    }
 
     // TODO: Process inputs, outputs, state
 
