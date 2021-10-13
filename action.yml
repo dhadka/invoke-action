@@ -1,0 +1,13 @@
+name: 'invoke-action'
+description: 'Invoke a GitHub Action'
+author: 'dhadka@github.com'
+inputs:
+  action:
+    required: true
+    description: 'The action to run (e.g., dhadka/private-action@v1)'
+  token:
+    required: false
+    description: 'The token used to access the action if private'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
