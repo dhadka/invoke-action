@@ -111,7 +111,10 @@ function run() {
         }
     });
 }
-run().catch(x => core.error(x));
+run().catch(x => {
+    core.error(x);
+    throw x;
+});
 
 
 /***/ }),

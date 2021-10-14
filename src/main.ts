@@ -93,4 +93,7 @@ async function run(): Promise<void> {
   }
 }
 
-run().catch(x => core.error(x))
+run().catch(x => {
+  core.error(x)
+  throw x
+})
