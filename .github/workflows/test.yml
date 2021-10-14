@@ -41,5 +41,5 @@ jobs:
         with:
           action: dhadka/check-no-diff
           token: ${{ secrets.PAT }}
-          args:
+          args: |
             path: foo/
