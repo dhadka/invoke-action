@@ -74,6 +74,7 @@ function run() {
                 }
                 else {
                     execArgs.push('sudo');
+                    execArgs.push('-E'); // preserve environment variables
                 }
             }
             if (sandbox) {

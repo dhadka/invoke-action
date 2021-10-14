@@ -45,6 +45,7 @@ async function run(): Promise<void> {
         core.info("Sudo not available on Windows.")
       } else {
         execArgs.push('sudo')
+        execArgs.push('-E') // preserve environment variables
       }
     }
 
