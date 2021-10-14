@@ -3,10 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Invoke actions",
-  "main": "lib/main.js",
+  "main": "dist/main/index.js",
   "scripts": {
-    "build": "tsc && ncc build",
-    "run": "npm run build && node dist/index.js",
+    "build": "tsc && ncc build -o dist/main lib/main.js && ncc build -o dist/post lib/post.js",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
     "lint": "eslint src/**/*.ts",
