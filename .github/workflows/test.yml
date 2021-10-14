@@ -7,14 +7,14 @@ on: # rebuild any PRs and main branch changes
       - 'releases/*'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: |
-          npm install
-      - run: |
-          npm run all
+  #build:
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - uses: actions/checkout@v2
+  #    - run: |
+  #        npm install
+  #    - run: |
+  #        npm run all
   test:
     runs-on: ubuntu-latest
     steps:
@@ -43,3 +43,15 @@ jobs:
           token: ${{ secrets.PAT }}
           args: |
             path: foo/
+  test-no-sudo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          mkdir test_cache/
+          chmod gou= test_cache
+          ls -al .
+      - uses: actions/cache@v2
+        with:
+          key: ${{ github.RUN_ID }}
+          path: test_cache

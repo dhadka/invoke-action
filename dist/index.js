@@ -97,7 +97,6 @@ function run() {
             if (args) {
                 const argsYml = yaml.parse(args);
                 for (const key of Object.keys(argsYml)) {
-                    core.info(`Passing argument ${key}=${argsYml[key]}`);
                     process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key];
                 }
             }
