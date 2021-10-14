@@ -23,6 +23,15 @@ jobs:
         with:
           action: dhadka/print-env
           token: ${{ secrets.PAT }}
+  test-sudo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          action: dhadka/print-env
+          token: ${{ secrets.PAT }}
+          sudo: true
   test-network-sandbox:
     runs-on: ubuntu-latest
     steps:
