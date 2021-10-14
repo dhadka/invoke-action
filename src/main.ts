@@ -14,7 +14,7 @@ async function run(): Promise<void> {
   const sudo = core.getInput('sudo') === 'true'
 
   const execArgs = []
-  const localPath = core.getState(`invoke-action-${action}`)
+  let localPath = core.getState(`invoke-action-${action}`)
 
   if (token) {
     core.setSecret(token)
@@ -31,6 +31,22 @@ async function run(): Promise<void> {
   }
 
   try {
+    // Pre-steps are not supported when using `uses: ./`, so checkout here if the pre-step did not run
+    if (!localPath) {
+      core.startGroup('Setup Action')
+      localPath = crypto.randomBytes(20).toString('hex')
+
+      const repoUrl = token ? `https://${token}@github.com/${repo}` : `https://github.com/${repo}`
+      await exec.exec('git', ['clone', repoUrl, localPath])
+
+      if (ref) {
+        await exec.exec('git', ['checkout', ref])
+      }
+
+      core.saveState(`invoke-action-${action}`, localPath)
+      core.endGroup()
+    }
+
     if (sudo) {
       if (os.platform() === 'win32') {
         core.info("Sudo not available on Windows.")

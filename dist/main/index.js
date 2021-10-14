@@ -35,6 +35,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const crypto = __importStar(__nccwpck_require__(417));
 const fs = __importStar(__nccwpck_require__(747));
 const os = __importStar(__nccwpck_require__(87));
 const path = __importStar(__nccwpck_require__(622));
@@ -49,7 +50,7 @@ function run() {
         const sandbox = core.getInput('sandbox');
         const sudo = core.getInput('sudo') === 'true';
         const execArgs = [];
-        const localPath = core.getState(`invoke-action-${action}`);
+        let localPath = core.getState(`invoke-action-${action}`);
         if (token) {
             core.setSecret(token);
         }
@@ -61,6 +62,17 @@ function run() {
             ref = actionParts.splice(1).join('@');
         }
         try {
+            if (!localPath) {
+                core.startGroup('Setup Action');
+                localPath = crypto.randomBytes(20).toString('hex');
+                const repoUrl = token ? `https://${token}@github.com/${repo}` : `https://github.com/${repo}`;
+                yield exec.exec('git', ['clone', repoUrl, localPath]);
+                if (ref) {
+                    yield exec.exec('git', ['checkout', ref]);
+                }
+                core.saveState(`invoke-action-${action}`, localPath);
+                core.endGroup();
+            }
             if (sudo) {
                 if (os.platform() === 'win32') {
                     core.info("Sudo not available on Windows.");
@@ -9577,6 +9589,14 @@ module.exports = require("assert");
 
 "use strict";
 module.exports = require("child_process");
+
+/***/ }),
+
+/***/ 417:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("crypto");
 
 /***/ }),
 
