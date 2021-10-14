@@ -43,7 +43,7 @@ jobs:
           token: ${{ secrets.PAT }}
           args: |
             path: foo/
-  test-no-sudo:
+  test-cache-no-sudo:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -53,5 +53,20 @@ jobs:
           ls -al .
       - uses: actions/cache@v2
         with:
-          key: ${{ github.RUN_ID }}
+          key: nosudo-${{ github.RUN_ID }}
           path: test_cache
+  test-cache-with-sudo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          mkdir test_cache/
+          chmod gou= test_cache
+          ls -al .
+      - uses: ./
+        with:
+          action: actions/cache@v2
+          sudo: true
+          args: |
+            key: sudo-${{ github.RUN_ID }}
+            path: test_cache
