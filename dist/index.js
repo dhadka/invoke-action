@@ -62,6 +62,7 @@ function run() {
             ref = actionParts.splice(1).join('@');
         }
         try {
+            core.startGroup('Setup');
             const repoUrl = token ? `https://${token}@github.com/${repo}` : `https://github.com/${repo}`;
             yield exec.exec('git', ['clone', repoUrl, localPath]);
             if (ref) {
@@ -100,6 +101,7 @@ function run() {
                     process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key];
                 }
             }
+            core.endGroup();
             yield exec.exec(execArgs[0], execArgs.slice(1));
             // TODO: Add support for pre and post steps
             // TODO: Add support for containers and composite actions?

@@ -65,7 +65,7 @@ jobs:
           ls -al .
       - uses: ./
         with:
-          action: actions/cache@v2
+          action: actions/cache
           sudo: true
           args: |
             key: sudo-${{ github.RUN_ID }}
