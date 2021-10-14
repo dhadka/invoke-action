@@ -7,6 +7,7 @@ the feasibility of handling some special scenarios, including...
 
 Actions run with `uses: foo/bar@v1` must be public.  It's possible to run a private action by checking out the repository
 and running it using a local path (e.g., `uses: ./`), but this adds extra steps to a workflow and also has some limitations.
+With `invoke-action`, we can run private actions in a single step:
 
 ```
 uses: dhadka/invoke-action@main
@@ -15,7 +16,7 @@ with:
   token: ${{ secrets.PAT }}
 ```
 
-Inputs, outputs, and state will work as expected.
+Inputs, outputs, and state will continue to work as expected.
 
 ```
 uses: dhadka/invoke-action@main
