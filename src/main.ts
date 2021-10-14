@@ -77,10 +77,9 @@ async function run(): Promise<void> {
     if (args) {
       const argsYml = yaml.parse(args)
 
-      for (const key of argsYml) {
-        const keyStr = `${key}`
-        core.info(`Passing argument ${keyStr}=${argsYml[keyStr]}`)
-        process.env[`INPUT_${keyStr.replace(/ /g, '_').toUpperCase()}`] = argsYml[keyStr]
+      for (const key of Object.keys(argsYml)) {
+        core.info(`Passing argument ${key}=${argsYml[key]}`)
+        process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key]
       }
     }
 
