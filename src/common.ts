@@ -97,21 +97,24 @@ export async function invokeAction(step: 'pre' | 'main' | 'post'): Promise<void>
   const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }))
 
   const executable = actionDefinition.runs.using === 'node12' ? 'node' : `${actionDefinition.runs.using}`
-  const file = `${actionDefinition.runs[step]}`
 
-  execArgs.push(executable)
-  execArgs.push(path.join(localPath, file))
+  if (actionDefinition.runs[step]) {
+    const file = `${actionDefinition.runs[step]}`
 
-  if (args) {
-    const argsYml = yaml.parse(args)
-
-    for (const key of Object.keys(argsYml)) {
-      process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key]
+    execArgs.push(executable)
+    execArgs.push(path.join(localPath, file))
+  
+    if (args) {
+      const argsYml = yaml.parse(args)
+  
+      for (const key of Object.keys(argsYml)) {
+        process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key]
+      }
     }
+  
+    await exec.exec(execArgs[0], execArgs.slice(1))
+  
+    // TODO: Add support for pre and post steps
+    // TODO: Add support for containers and composite actions?
   }
-
-  await exec.exec(execArgs[0], execArgs.slice(1))
-
-  // TODO: Add support for pre and post steps
-  // TODO: Add support for containers and composite actions?
 }
