@@ -61,7 +61,8 @@ jobs:
           dd bs=10 count=1048576 </dev/urandom > test_cache/test_file
           chmod gou= test_cache
           ls -al .
-      - uses: actions/cache@v2
+      - name: Cache folder
+        uses: actions/cache@v2
         with:
           key: nosudo-${{ github.RUN_ID }}
           path: test_cache
@@ -74,7 +75,8 @@ jobs:
           dd bs=10 count=1048576 </dev/urandom > test_cache/test_file
           chmod gou= test_cache
           ls -al .
-      - uses: ./
+      - name: Cache folder
+        uses: ./
         with:
           action: actions/cache
           sudo: true

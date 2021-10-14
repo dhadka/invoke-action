@@ -116,5 +116,7 @@ export async function invokeAction(step: 'pre' | 'main' | 'post'): Promise<void>
   
     // TODO: Add support for pre and post steps
     // TODO: Add support for containers and composite actions?
+  } else {
+    core.info(`No ${step}-step defined for this action, skipping`)
   }
 }

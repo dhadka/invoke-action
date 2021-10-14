@@ -9,7 +9,7 @@ This is an experimental action to see if and how we can handle special scenarios
 3. Running an "untrusted" action in a sandbox, where file or network access is restricted
 
 Ideally, if any of these features are useful, they should be incorporated into the GitHub Actions runner
-itself to avoid 
+itself to avoid a middleman.
 
 ## Limitations / Learnings
 
@@ -27,3 +27,6 @@ itself to avoid
      arg1: value1
      arg2: value2
    ```
+
+2. This will run `pre:` and `post:` steps if they are set, but does not check `pre-if:` or `post-if:` conditions.  That
+   requires evaluating expressions which is not trivial to match the runner behavior.
