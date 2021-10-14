@@ -12,7 +12,7 @@ With `invoke-action`, we can run private actions in a single step:
 ```
 uses: dhadka/invoke-action@main
 with:
-  action: dhadka/print-env
+  action: dhadka/private-action@v1
   token: ${{ secrets.PAT }}
 ```
 
@@ -21,11 +21,10 @@ Inputs, outputs, and state will continue to work as expected.
 ```
 uses: dhadka/invoke-action@main
 with:
-  action: dhadka/print-env
+  action: dhadka/private-action@v1
   token: ${{ secrets.PAT }}
-  args: |
-    foo: bar
-    hello: world
+  arg1: value1
+  arg2: value2
 ```
 
 ## Running with elevated permissions
