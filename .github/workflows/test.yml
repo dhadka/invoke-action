@@ -58,6 +58,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: |
           mkdir test_cache/
+          dd bs=10 count=1048576 </dev/urandom > test_cache/test_file
           chmod gou= test_cache
           ls -al .
       - uses: actions/cache@v2
@@ -70,6 +71,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: |
           mkdir test_cache/
+          dd bs=10 count=1048576 </dev/urandom > test_cache/test_file
           chmod gou= test_cache
           ls -al .
       - uses: ./
