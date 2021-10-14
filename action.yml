@@ -8,6 +8,9 @@ inputs:
   token:
     required: false
     description: 'The token used to access the action if private'
+  args:
+    required: false
+    description: 'The arguments to pass into the action'
   sudo:
     required: false
     description: 'Use sudo on Linux and MacOS'

@@ -9,6 +9,7 @@ import * as exec from '@actions/exec'
 async function run(): Promise<void> {
   const action = core.getInput('action')
   const token = core.getInput('token')
+  const args = core.getInput('args')
   const sandbox = core.getInput('sandbox')
   const sudo = core.getInput('sudo') === 'true'
 
@@ -73,7 +74,14 @@ async function run(): Promise<void> {
     execArgs.push(executable)
     execArgs.push(path.join(localPath, mainFile))
 
-    // TODO: Process inputs, outputs, state
+    if (args) {
+      const argsYml = yaml.parse(args)
+
+      for (const key of argsYml) {
+        core.info(`Passing argument ${key}=${argsYml[key]}`)
+        process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key]
+      }
+    }
 
     await exec.exec(execArgs[0], execArgs.slice(1))
 

@@ -46,6 +46,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const action = core.getInput('action');
         const token = core.getInput('token');
+        const args = core.getInput('args');
         const sandbox = core.getInput('sandbox');
         const sudo = core.getInput('sudo') === 'true';
         const execArgs = [];
@@ -93,7 +94,13 @@ function run() {
             const mainFile = actionDefinition.runs.main;
             execArgs.push(executable);
             execArgs.push(path.join(localPath, mainFile));
-            // TODO: Process inputs, outputs, state
+            if (args) {
+                const argsYml = yaml.parse(args);
+                for (const key of argsYml) {
+                    core.info(`Passing argument ${key}=${argsYml[key]}`);
+                    process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key];
+                }
+            }
             yield exec.exec(execArgs[0], execArgs.slice(1));
             // TODO: Add support for pre and post steps
             // TODO: Add support for containers and composite actions?

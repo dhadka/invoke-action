@@ -23,7 +23,7 @@ jobs:
         with:
           action: dhadka/print-env
           token: ${{ secrets.PAT }}
-  test-network-sandbox: # make sure the action works on a clean machine without building
+  test-network-sandbox:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -33,3 +33,13 @@ jobs:
           token: ${{ secrets.PAT }}
           sandbox: |
             network: none
+  test-args:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          action: dhadka/check-no-diff
+          token: ${{ secrets.PAT }}
+          args:
+            path: foo/
