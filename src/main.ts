@@ -68,8 +68,8 @@ async function run(): Promise<void> {
     const actionDefinitionPath = path.join(localPath, "action.yml")
     const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }))
 
-    const executable = actionDefinition.runs.using === 'node12' ? 'node' : actionDefinition.runs.using
-    const mainFile = actionDefinition.runs.main
+    const executable = actionDefinition.runs.using === 'node12' ? 'node' : `${actionDefinition.runs.using}`
+    const mainFile = `${actionDefinition.runs.main}`
 
     execArgs.push(executable)
     execArgs.push(path.join(localPath, mainFile))
