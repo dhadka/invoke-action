@@ -14,7 +14,7 @@ async function run(): Promise<void> {
   const sudo = core.getInput('sudo') === 'true'
 
   const execArgs = []
-  const localPath = crypto.randomBytes(20).toString('hex')
+  const localPath = core.getState(`invoke-action-${action}`)
 
   if (token) {
     core.setSecret(token)
@@ -31,8 +31,6 @@ async function run(): Promise<void> {
   }
 
   try {
-    core.startGroup('Setup')
-
     const repoUrl = token ? `https://${token}@github.com/${repo}` : `https://github.com/${repo}`
     await exec.exec('git', ['clone', repoUrl, localPath])
 
@@ -72,7 +70,7 @@ async function run(): Promise<void> {
     const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }))
 
     if (actionDefinition.runs.post) {
-      const executable = actionDefinition.runs.post === 'node12' ? 'node' : `${actionDefinition.runs.using}`
+      const executable = actionDefinition.runs.using === 'node12' ? 'node' : `${actionDefinition.runs.using}`
       const postFile = `${actionDefinition.runs.post}`
 
       execArgs.push(executable)
@@ -85,8 +83,6 @@ async function run(): Promise<void> {
           process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key]
         }
       }
-
-      core.endGroup()
 
       await exec.exec(execArgs[0], execArgs.slice(1))
     }

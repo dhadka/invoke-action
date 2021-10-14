@@ -5,7 +5,7 @@
   "description": "Invoke actions",
   "main": "dist/main/index.js",
   "scripts": {
-    "build": "tsc && ncc build -o dist/main lib/main.js && ncc build -o dist/post lib/post.js",
+    "build": "tsc && ncc build -o dist/main lib/main.js && ncc build -o dist/post lib/post.js && ncc build -o dist/pre lib/pre.js",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
     "lint": "eslint src/**/*.ts",

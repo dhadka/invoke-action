@@ -35,7 +35,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const crypto = __importStar(__nccwpck_require__(417));
 const fs = __importStar(__nccwpck_require__(747));
 const os = __importStar(__nccwpck_require__(87));
 const path = __importStar(__nccwpck_require__(622));
@@ -50,7 +49,7 @@ function run() {
         const sandbox = core.getInput('sandbox');
         const sudo = core.getInput('sudo') === 'true';
         const execArgs = [];
-        const localPath = crypto.randomBytes(20).toString('hex');
+        const localPath = core.getState(`invoke-action-${action}`);
         if (token) {
             core.setSecret(token);
         }
@@ -62,12 +61,6 @@ function run() {
             ref = actionParts.splice(1).join('@');
         }
         try {
-            core.startGroup('Setup');
-            const repoUrl = token ? `https://${token}@github.com/${repo}` : `https://github.com/${repo}`;
-            yield exec.exec('git', ['clone', repoUrl, localPath]);
-            if (ref) {
-                yield exec.exec('git', ['checkout', ref]);
-            }
             if (sudo) {
                 if (os.platform() === 'win32') {
                     core.info("Sudo not available on Windows.");
@@ -102,7 +95,6 @@ function run() {
                     process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key];
                 }
             }
-            core.endGroup();
             yield exec.exec(execArgs[0], execArgs.slice(1));
             // TODO: Add support for pre and post steps
             // TODO: Add support for containers and composite actions?
@@ -9585,14 +9577,6 @@ module.exports = require("assert");
 
 "use strict";
 module.exports = require("child_process");
-
-/***/ }),
-
-/***/ 417:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("crypto");
 
 /***/ }),
 

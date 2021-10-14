@@ -14,7 +14,7 @@ async function run(): Promise<void> {
   const sudo = core.getInput('sudo') === 'true'
 
   const execArgs = []
-  const localPath = core.getState(`invoke-action-${action}`)
+  const localPath = crypto.randomBytes(20).toString('hex')
 
   if (token) {
     core.setSecret(token)
@@ -31,6 +31,18 @@ async function run(): Promise<void> {
   }
 
   try {
+    core.startGroup('Setup Action')
+
+    const repoUrl = token ? `https://${token}@github.com/${repo}` : `https://github.com/${repo}`
+    await exec.exec('git', ['clone', repoUrl, localPath])
+
+    if (ref) {
+      await exec.exec('git', ['checkout', ref])
+    }
+
+    core.saveState(`invoke-action-${action}`, localPath)
+    core.endGroup()
+
     if (sudo) {
       if (os.platform() === 'win32') {
         core.info("Sudo not available on Windows.")
@@ -62,21 +74,23 @@ async function run(): Promise<void> {
     const actionDefinitionPath = path.join(localPath, "action.yml")
     const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }))
 
-    const executable = actionDefinition.runs.using === 'node12' ? 'node' : `${actionDefinition.runs.using}`
-    const mainFile = `${actionDefinition.runs.main}`
+    if (actionDefinition.runs.pre) {
+      const executable = actionDefinition.runs.using === 'node12' ? 'node' : `${actionDefinition.runs.using}`
+      const preFile = `${actionDefinition.runs.pre}`
 
-    execArgs.push(executable)
-    execArgs.push(path.join(localPath, mainFile))
+      execArgs.push(executable)
+      execArgs.push(path.join(localPath, preFile))
 
-    if (args) {
-      const argsYml = yaml.parse(args)
+      if (args) {
+        const argsYml = yaml.parse(args)
 
-      for (const key of Object.keys(argsYml)) {
-        process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key]
+        for (const key of Object.keys(argsYml)) {
+          process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key]
+        }
       }
-    }
 
-    await exec.exec(execArgs[0], execArgs.slice(1))
+      await exec.exec(execArgs[0], execArgs.slice(1))
+    }
 
     // TODO: Add support for pre and post steps
     // TODO: Add support for containers and composite actions?
