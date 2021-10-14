@@ -1,7 +1,7 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 95:
+/***/ 979:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -35,85 +35,138 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.invokeAction = exports.cleanupAction = exports.setupAction = void 0;
+const crypto = __importStar(__nccwpck_require__(417));
 const fs = __importStar(__nccwpck_require__(747));
 const os = __importStar(__nccwpck_require__(87));
 const path = __importStar(__nccwpck_require__(622));
 const yaml = __importStar(__nccwpck_require__(552));
 const core = __importStar(__nccwpck_require__(186));
 const exec = __importStar(__nccwpck_require__(514));
-function run() {
+function setupAction() {
     return __awaiter(this, void 0, void 0, function* () {
         const action = core.getInput('action');
         const token = core.getInput('token');
-        const args = core.getInput('args');
-        const sandbox = core.getInput('sandbox');
-        const sudo = core.getInput('sudo') === 'true';
-        const execArgs = [];
-        const localPath = core.getState(`invoke-action-${action}`);
-        if (token) {
-            core.setSecret(token);
-        }
-        let repo = action;
-        let ref = undefined;
-        if (action.indexOf('@') >= 0) {
-            const actionParts = action.split('@');
-            repo = actionParts[0];
-            ref = actionParts.splice(1).join('@');
-        }
-        try {
+        let localPath = core.getState(`invoke-action-${action}`);
+        // Checkout only if necessary
+        if (!localPath) {
+            core.startGroup('Setup Action');
+            // Separate the repo from the tag/ref
+            let repo = action;
+            let ref = undefined;
+            if (action.indexOf('@') >= 0) {
+                const actionParts = action.split('@');
+                repo = actionParts[0];
+                ref = actionParts.splice(1).join('@');
+            }
+            // Hide token from output
+            if (token) {
+                core.setSecret(token);
+            }
+            // Checkout repo to a random directory
+            localPath = crypto.randomBytes(20).toString('hex');
             const repoUrl = token ? `https://${token}@github.com/${repo}` : `https://github.com/${repo}`;
             yield exec.exec('git', ['clone', repoUrl, localPath]);
             if (ref) {
                 yield exec.exec('git', ['checkout', ref]);
             }
-            if (sudo) {
-                if (os.platform() === 'win32') {
-                    core.info("Sudo not available on Windows.");
-                }
-                else {
-                    execArgs.push('sudo');
-                    execArgs.push('-E'); // preserve environment variables
-                }
-            }
-            if (sandbox) {
-                if (os.platform() !== 'linux') {
-                    core.error('Sandbox is only supported on Linux');
-                    return;
-                }
-                yield exec.exec('sudo', ['apt-get', 'install', 'firejail']); // TODO: Move to pre step and only run once
-                execArgs.push('firejail');
-                const sandboxYml = yaml.parse(sandbox);
-                if (sandboxYml.network) {
-                    execArgs.push(`--net=${sandboxYml.network}`);
-                }
-                // TODO: sandbox file system
-            }
-            const actionDefinitionPath = path.join(localPath, "action.yml");
-            const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }));
-            if (actionDefinition.runs.post) {
-                const executable = actionDefinition.runs.using === 'node12' ? 'node' : `${actionDefinition.runs.using}`;
-                const postFile = `${actionDefinition.runs.post}`;
-                execArgs.push(executable);
-                execArgs.push(path.join(localPath, postFile));
-                if (args) {
-                    const argsYml = yaml.parse(args);
-                    for (const key of Object.keys(argsYml)) {
-                        process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key];
-                    }
-                }
-                yield exec.exec(execArgs[0], execArgs.slice(1));
-            }
-            // TODO: Add support for pre and post steps
-            // TODO: Add support for containers and composite actions?
+            core.saveState(`invoke-action-${action}`, localPath);
+            core.endGroup();
         }
-        finally {
+        return localPath;
+    });
+}
+exports.setupAction = setupAction;
+function cleanupAction() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const action = core.getInput('action');
+        const localPath = core.getState(`invoke-action-${action}`);
+        if (localPath) {
             fs.rmdirSync(localPath, { recursive: true });
         }
     });
 }
-run().catch(x => {
-    core.error(x);
-    throw x;
+exports.cleanupAction = cleanupAction;
+function invokeAction(step) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const args = core.getInput('args');
+        const sandbox = core.getInput('sandbox');
+        const sudo = core.getInput('sudo') === 'true';
+        const execArgs = [];
+        const localPath = yield setupAction();
+        if (sudo) {
+            if (os.platform() === 'win32') {
+                core.info("Sudo not available on Windows.");
+            }
+            else {
+                execArgs.push('sudo');
+                execArgs.push('-E'); // preserve environment variables
+            }
+        }
+        if (sandbox) {
+            if (os.platform() !== 'linux') {
+                core.error('Sandbox is only supported on Linux');
+                return;
+            }
+            yield exec.exec('sudo', ['apt-get', 'install', 'firejail']); // TODO: Move to pre step and only run once
+            execArgs.push('firejail');
+            const sandboxYml = yaml.parse(sandbox);
+            if (sandboxYml.network) {
+                execArgs.push(`--net=${sandboxYml.network}`);
+            }
+            // TODO: sandbox file system
+        }
+        const actionDefinitionPath = path.join(localPath, "action.yml");
+        const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }));
+        const executable = actionDefinition.runs.using === 'node12' ? 'node' : `${actionDefinition.runs.using}`;
+        const file = `${actionDefinition.runs[step]}`;
+        execArgs.push(executable);
+        execArgs.push(path.join(localPath, file));
+        if (args) {
+            const argsYml = yaml.parse(args);
+            for (const key of Object.keys(argsYml)) {
+                process.env[`INPUT_${key.replace(/ /g, '_').toUpperCase()}`] = argsYml[key];
+            }
+        }
+        yield exec.exec(execArgs[0], execArgs.slice(1));
+        // TODO: Add support for pre and post steps
+        // TODO: Add support for containers and composite actions?
+    });
+}
+exports.invokeAction = invokeAction;
+
+
+/***/ }),
+
+/***/ 95:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(186));
+const common_1 = __nccwpck_require__(979);
+(0, common_1.invokeAction)('post').catch(x => {
+    core.setFailed(x);
 });
 
 
@@ -9584,6 +9637,14 @@ module.exports = require("assert");
 
 "use strict";
 module.exports = require("child_process");
+
+/***/ }),
+
+/***/ 417:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("crypto");
 
 /***/ }),
 
