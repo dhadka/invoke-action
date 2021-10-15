@@ -90,8 +90,9 @@ exports.cleanupAction = cleanupAction;
 function invokeAction(step) {
     return __awaiter(this, void 0, void 0, function* () {
         const args = core.getInput('args');
-        const sandbox = core.getInput('sandbox');
         const sudo = core.getInput('sudo') === 'true';
+        const network = core.getInput('network');
+        const fileSystem = core.getInput('filesystem');
         const execArgs = [];
         const localPath = yield setupAction();
         if (sudo) {
@@ -103,18 +104,37 @@ function invokeAction(step) {
                 execArgs.push('-E'); // preserve environment variables
             }
         }
-        if (sandbox) {
+        if (network || fileSystem) {
             if (os.platform() !== 'linux') {
-                core.error('Sandbox is only supported on Linux');
+                core.error('Sandboxing is only supported on Linux');
                 return;
             }
             yield exec.exec('sudo', ['apt-get', 'install', 'firejail']); // TODO: Move to pre step and only run once
             execArgs.push('firejail');
-            const sandboxYml = yaml.parse(sandbox);
-            if (sandboxYml.network) {
-                execArgs.push(`--net=${sandboxYml.network}`);
+            if (network) {
+                if (network === 'none') {
+                    execArgs.push(`--net=none`);
+                }
+                else {
+                    core.error(`Unrecognized network sandbox option: ${network}`);
+                    return;
+                }
             }
-            // TODO: sandbox file system
+            if (fileSystem) {
+                if (fileSystem === 'private') {
+                    execArgs.push('--private');
+                }
+                else if (fileSystem === 'overlay') {
+                    execArgs.push('--overlay-tmpfs');
+                }
+                else if (fileSystem === 'read-only') {
+                    execArgs.push('--read-only=.');
+                }
+                else {
+                    core.error(`Unrecognized file system sandbox option: ${fileSystem}`);
+                    return;
+                }
+            }
         }
         const actionDefinitionPath = path.join(localPath, "action.yml");
         const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }));

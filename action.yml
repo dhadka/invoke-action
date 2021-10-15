@@ -15,13 +15,12 @@ inputs:
     required: false
     description: 'Use sudo on Linux and MacOS'
     default: false
-  sandbox:
+  network:
     required: false
-    description: 'Run action in a sandbox with restricted network and file access'
-  internal_failure:
+    description: 'Network sandbox, supported values include "none"'
+  filesystem:
     required: false
-    description: 'Internal use, do not set'
-    default: ${{ failure() }}
+    description: 'File system sandbox, supported values include "private", "read-only", and "overlay"'
 runs:
   using: 'node12'
   pre: 'dist/pre/index.js'

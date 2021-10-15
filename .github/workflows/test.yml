@@ -40,8 +40,7 @@ jobs:
         with:
           action: dhadka/malicious-action
           token: ${{ secrets.PAT }}
-          sandbox: |
-            network: none
+          network: none
   test-args:
     runs-on: ubuntu-latest
     steps:
@@ -50,8 +49,7 @@ jobs:
         with:
           action: dhadka/check-no-diff
           token: ${{ secrets.PAT }}
-          args: |
-            path: foo/
+          path: foo/
   test-cache-no-sudo:
     runs-on: ubuntu-latest
     steps:
@@ -80,6 +78,5 @@ jobs:
         with:
           action: actions/cache
           sudo: true
-          args: |
-            key: sudo-${{ github.RUN_ID }}
-            path: test_cache
+          key: sudo-${{ github.RUN_ID }}
+          path: test_cache

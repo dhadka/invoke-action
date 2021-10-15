@@ -50,17 +50,37 @@ quickly become unsustainable.  Instead, can we add some level of security by run
 network or file access?
 
 ```
+# Completely block network access
 uses: dhadka/invoke-action@main
 with:
   action: dhadka/malicious-action
-  sandbox: |
-    network: none
+  network: none
+
+# Block all writes
+uses: dhadka/invoke-action@main
+with:
+  action: dhadka/malicious-action
+  fileSystem: read-only
+
+# Run action on an overlay file system, where changes are discarded at the end of the action
+uses: dhadka/invoke-action@main
+with:
+  action: dhadka/malicious-action
+  fileSystem: overlay
+
+# Run action on a private file system that can not read or write to existing files
+uses: dhadka/invoke-action@main
+with:
+  action: dhadka/malicious-action
+  fileSystem: private
 ```
 
-The supported options are currently limited, but one could imagine having a sandbox that allows access to only certain IP
-addresses, restricts file system access with read-only or read-write controls, filters out environment variables, etc.
+The supported options are currently limited, but the underlying tool providing the sandbox,
+[Firejail](https://firejail.wordpress.com/features-3/man-firejail/), supports many additional options.
 
 ## Limitations
 
 This action can and will run any `pre:` and `post:` steps defined by the action, but it does not evaluate the `pre-if:` and
-`post-if:` conditions.  As a first step, I plan to support the standard expressions like `success()` and `always()`.
+`post-if:` conditions.  The only supported condition is `success()` and will fail otherwise.
+
+Sandboxing currently only works on Linux.
