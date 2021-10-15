@@ -123,8 +123,7 @@ function invokeAction(step) {
             if (fileSystem) {
                 if (fileSystem === 'none') {
                     // We must allow access to the local path to run the action
-                    execArgs.push('--whitelist');
-                    execArgs.push(localPath);
+                    execArgs.push(`--whitelist=${localPath}`);
                 }
                 else if (fileSystem === 'overlay') {
                     execArgs.push('--overlay-tmpfs');
