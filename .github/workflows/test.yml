@@ -15,7 +15,7 @@ jobs:
   #        npm install
   #    - run: |
   #        npm run all
-  test:
+  test-pat:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -30,7 +30,6 @@ jobs:
       - uses: ./
         with:
           action: dhadka/print-env
-          token: ${{ secrets.PAT }}
           sudo: true
   test-network-sandbox:
     runs-on: ubuntu-latest
@@ -39,8 +38,35 @@ jobs:
       - uses: ./
         with:
           action: dhadka/malicious-action
-          token: ${{ secrets.PAT }}
           network: none
+  test-filesystem-readonly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          action: dhadka/malicious-action
+          fileSystem: read-only
+      - run: ls -al
+  test-filesystem-overlay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          action: dhadka/malicious-action
+          fileSystem: overlay
+      - run: ls -al
+  test-filesystem-private:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          action: dhadka/malicious-action
+          token: ${{ secrets.PAT }}
+          fileSystem: private
+      - run: ls -al
   test-args:
     runs-on: ubuntu-latest
     steps:
@@ -48,7 +74,6 @@ jobs:
       - uses: ./
         with:
           action: dhadka/check-no-diff
-          token: ${{ secrets.PAT }}
           path: foo/
   test-cache-no-sudo:
     runs-on: ubuntu-latest
