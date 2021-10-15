@@ -51,12 +51,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: echo "hello world!" > foo
       - uses: ./
         with:
           action: dhadka/malicious-action
           token: ${{ secrets.PAT }}
           fileSystem: read-only
-      - run: ls -al
+      - run: cat foo
   test-filesystem-overlay:
     runs-on: ubuntu-latest
     steps:
