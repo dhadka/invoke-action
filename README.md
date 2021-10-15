@@ -80,7 +80,9 @@ The supported options are currently limited, but the underlying tool providing t
 
 ## Limitations
 
-This action can and will run any `pre:` and `post:` steps defined by the action, but it does not evaluate the `pre-if:` and
-`post-if:` conditions.  The only supported condition is `success()` and will fail otherwise.
+1. This action can and will run any `pre:` and `post:` steps defined by the action, but it does not evaluate the `pre-if:` and
+   `post-if:` conditions.  The only supported condition is `success()` and will fail otherwise.  While we could read these conditional
+   expressions, the runner does not have enough information to evaluate them (for example, `failure()` would require access to the current
+   job status).
 
-Sandboxing currently only works on Linux.
+2. Sandboxing currently only works on Linux.
