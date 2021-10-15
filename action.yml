@@ -18,10 +18,13 @@ inputs:
   sandbox:
     required: false
     description: 'Run action in a sandbox with restricted network and file access'
+  internal_failure:
+    required: false
+    description: 'Internal use, do not set'
+    default: ${{ failure() }}
 runs:
   using: 'node12'
   pre: 'dist/pre/index.js'
-  pre-if: always()
   main: 'dist/main/index.js'
   post: 'dist/post/index.js'
-  post-if: always()
+  post-if: success()

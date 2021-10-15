@@ -118,10 +118,17 @@ function invokeAction(step) {
         }
         const actionDefinitionPath = path.join(localPath, "action.yml");
         const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }));
-        const executable = actionDefinition.runs.using === 'node12' ? 'node' : `${actionDefinition.runs.using}`;
+        if (actionDefinition.runs.using !== 'node12') {
+            core.error('Only node12 actions are supported');
+            return;
+        }
         if (actionDefinition.runs[step]) {
+            if (actionDefinition.runs[`${step}-if`] && actionDefinition.runs[`${step}-if`] !== 'success()') {
+                core.error(`Only ${step}-if conditions using success() is supported`);
+                return;
+            }
             const file = `${actionDefinition.runs[step]}`;
-            execArgs.push(executable);
+            execArgs.push('node');
             execArgs.push(path.join(localPath, file));
             if (args) {
                 const argsYml = yaml.parse(args);
@@ -130,8 +137,6 @@ function invokeAction(step) {
                 }
             }
             yield exec.exec(execArgs[0], execArgs.slice(1));
-            // TODO: Add support for pre and post steps
-            // TODO: Add support for containers and composite actions?
         }
         else {
             core.info(`No ${step}-step defined for this action, skipping`);
