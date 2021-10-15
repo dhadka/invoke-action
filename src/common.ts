@@ -81,7 +81,9 @@ export async function invokeAction(step: 'pre' | 'main' | 'post'): Promise<void>
       return
     }
 
+    core.startGroup('Setup Sandbox')
     await exec.exec('sudo', ['apt-get', 'install', 'firejail']) // TODO: Move to pre step and only run once
+    core.endGroup()
 
     execArgs.push('firejail')
 
@@ -100,7 +102,7 @@ export async function invokeAction(step: 'pre' | 'main' | 'post'): Promise<void>
       } else if (fileSystem === 'overlay') {
         execArgs.push('--overlay-tmpfs')
       } else if (fileSystem === 'read-only') {
-        execArgs.push('--read-only=.')
+        execArgs.push('--read-only=*')
       } else {
         core.error(`Unrecognized file system sandbox option: ${fileSystem}`)
         return

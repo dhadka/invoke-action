@@ -109,7 +109,9 @@ function invokeAction(step) {
                 core.error('Sandboxing is only supported on Linux');
                 return;
             }
+            core.startGroup('Setup Sandbox');
             yield exec.exec('sudo', ['apt-get', 'install', 'firejail']); // TODO: Move to pre step and only run once
+            core.endGroup();
             execArgs.push('firejail');
             if (network) {
                 if (network === 'none') {
@@ -128,7 +130,7 @@ function invokeAction(step) {
                     execArgs.push('--overlay-tmpfs');
                 }
                 else if (fileSystem === 'read-only') {
-                    execArgs.push('--read-only=.');
+                    execArgs.push('--read-only=*');
                 }
                 else {
                     core.error(`Unrecognized file system sandbox option: ${fileSystem}`);
