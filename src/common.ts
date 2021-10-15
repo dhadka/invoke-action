@@ -85,6 +85,7 @@ export async function invokeAction(step: 'pre' | 'main' | 'post'): Promise<void>
     core.endGroup()
 
     execArgs.push('firejail')
+    execArgs.push('--quiet')
 
     if (network) {
       if (network === 'none') {

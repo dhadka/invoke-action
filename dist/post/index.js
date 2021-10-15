@@ -112,6 +112,7 @@ function invokeAction(step) {
             yield exec.exec('sudo', ['apt-get', 'install', 'firejail']); // TODO: Move to pre step and only run once
             core.endGroup();
             execArgs.push('firejail');
+            execArgs.push('--quiet');
             if (network) {
                 if (network === 'none') {
                     execArgs.push(`--net=none`);
