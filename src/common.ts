@@ -77,8 +77,7 @@ export async function invokeAction(step: 'pre' | 'main' | 'post'): Promise<void>
 
   if (network || fileSystem) {
     if (os.platform() !== 'linux') {
-      core.error('Sandboxing is only supported on Linux')
-      return
+      throw Error('Sandboxing is only supported on Linux')
     }
 
     core.startGroup('Setup Sandbox')
@@ -91,8 +90,7 @@ export async function invokeAction(step: 'pre' | 'main' | 'post'): Promise<void>
       if (network === 'none') {
         execArgs.push(`--net=none`)
       } else {
-        core.error(`Unrecognized network sandbox option: ${network}`)
-        return
+        throw Error(`Unrecognized network sandbox option: ${network}`)
       }
     }
 
@@ -106,8 +104,7 @@ export async function invokeAction(step: 'pre' | 'main' | 'post'): Promise<void>
       } else if (fileSystem === 'read-only') {
         execArgs.push('--read-only=*')
       } else {
-        core.error(`Unrecognized file system sandbox option: ${fileSystem}`)
-        return
+        throw Error(`Unrecognized file system sandbox option: ${fileSystem}`)
       }
     }
   }
@@ -116,14 +113,12 @@ export async function invokeAction(step: 'pre' | 'main' | 'post'): Promise<void>
   const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }))
 
   if (actionDefinition.runs.using !== 'node12') {
-    core.error('Only node12 actions are supported')
-    return
+    throw Error('Only node12 actions are supported')
   }
 
   if (actionDefinition.runs[step]) {
     if (actionDefinition.runs[`${step}-if`] && actionDefinition.runs[`${step}-if`] !== 'success()') {
-      core.error(`Only ${step}-if conditions using success() is supported`)
-      return
+      throw Error(`Only ${step}-if conditions using success() is supported`)
     }
 
     const file = `${actionDefinition.runs[step]}`

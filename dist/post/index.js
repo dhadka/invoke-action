@@ -106,8 +106,7 @@ function invokeAction(step) {
         }
         if (network || fileSystem) {
             if (os.platform() !== 'linux') {
-                core.error('Sandboxing is only supported on Linux');
-                return;
+                throw Error('Sandboxing is only supported on Linux');
             }
             core.startGroup('Setup Sandbox');
             yield exec.exec('sudo', ['apt-get', 'install', 'firejail']); // TODO: Move to pre step and only run once
@@ -118,8 +117,7 @@ function invokeAction(step) {
                     execArgs.push(`--net=none`);
                 }
                 else {
-                    core.error(`Unrecognized network sandbox option: ${network}`);
-                    return;
+                    throw Error(`Unrecognized network sandbox option: ${network}`);
                 }
             }
             if (fileSystem) {
@@ -135,21 +133,18 @@ function invokeAction(step) {
                     execArgs.push('--read-only=*');
                 }
                 else {
-                    core.error(`Unrecognized file system sandbox option: ${fileSystem}`);
-                    return;
+                    throw Error(`Unrecognized file system sandbox option: ${fileSystem}`);
                 }
             }
         }
         const actionDefinitionPath = path.join(localPath, "action.yml");
         const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }));
         if (actionDefinition.runs.using !== 'node12') {
-            core.error('Only node12 actions are supported');
-            return;
+            throw Error('Only node12 actions are supported');
         }
         if (actionDefinition.runs[step]) {
             if (actionDefinition.runs[`${step}-if`] && actionDefinition.runs[`${step}-if`] !== 'success()') {
-                core.error(`Only ${step}-if conditions using success() is supported`);
-                return;
+                throw Error(`Only ${step}-if conditions using success() is supported`);
             }
             const file = `${actionDefinition.runs[step]}`;
             execArgs.push('node');
