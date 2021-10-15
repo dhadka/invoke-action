@@ -97,8 +97,10 @@ export async function invokeAction(step: 'pre' | 'main' | 'post'): Promise<void>
     }
 
     if (fileSystem) {
-      if (fileSystem === 'private') {
-        execArgs.push('--private')
+      if (fileSystem === 'none') {
+        // We must allow access to the local path to run the action
+        execArgs.push('--whitelist')
+        execArgs.push(localPath)
       } else if (fileSystem === 'overlay') {
         execArgs.push('--overlay-tmpfs')
       } else if (fileSystem === 'read-only') {

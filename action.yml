@@ -20,7 +20,7 @@ inputs:
     description: 'Network sandbox, supported values include "none"'
   filesystem:
     required: false
-    description: 'File system sandbox, supported values include "private", "read-only", and "overlay"'
+    description: 'File system sandbox, supported values include "none", "read-only", and "overlay"'
 runs:
   using: 'node12'
   pre: 'dist/pre/index.js'

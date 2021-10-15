@@ -56,23 +56,23 @@ with:
   action: dhadka/malicious-action
   network: none
 
-# Block all writes
+# No access to files
+uses: dhadka/invoke-action@main
+with:
+  action: dhadka/malicious-action
+  fileSystem: none
+
+# Read-only mode, writing to existing files is blocked
 uses: dhadka/invoke-action@main
 with:
   action: dhadka/malicious-action
   fileSystem: read-only
 
-# Run action on an overlay file system, where changes are discarded at the end of the action
+# Overlay mode, can write to existing files but changes are discarded at the end of the action
 uses: dhadka/invoke-action@main
 with:
   action: dhadka/malicious-action
   fileSystem: overlay
-
-# Run action on a private file system that can not read or write to existing files
-uses: dhadka/invoke-action@main
-with:
-  action: dhadka/malicious-action
-  fileSystem: private
 ```
 
 The supported options are currently limited, but the underlying tool providing the sandbox,
