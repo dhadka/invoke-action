@@ -139,15 +139,16 @@ function invokeAction(step) {
         }
         const actionDefinitionPath = path.join(localPath, "action.yml");
         const actionDefinition = yaml.parse(fs.readFileSync(actionDefinitionPath, { encoding: "utf-8" }));
-        if (actionDefinition.runs.using !== 'node12') {
-            throw Error('Only node12 actions are supported');
+        if (actionDefinition.runs.using === 'docker' || actionDefinition.runs.using === 'composite') {
+            throw Error('Docker and composite actions are not supported');
         }
         if (actionDefinition.runs[step]) {
             if (actionDefinition.runs[`${step}-if`] && actionDefinition.runs[`${step}-if`] !== 'success()') {
-                throw Error(`Only ${step}-if conditions using success() is supported`);
+                throw Error(`Only ${step}-if conditions using success() are supported`);
             }
+            const executable = actionDefinition.runs.using === 'node12' ? 'node' : `${actionDefinition.runs.using}`;
             const file = `${actionDefinition.runs[step]}`;
-            execArgs.push('node');
+            execArgs.push(executable);
             execArgs.push(path.join(localPath, file));
             if (args) {
                 const argsYml = yaml.parse(args);

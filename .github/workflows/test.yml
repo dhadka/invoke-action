@@ -113,7 +113,7 @@ jobs:
       - name: Cache folder
         uses: ./
         with:
-          action: actions/cache
+          action: actions/cache@v2
           sudo: true
           key: sudo-${{ github.RUN_ID }}
           path: test_cache
