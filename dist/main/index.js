@@ -68,7 +68,7 @@ function setupAction() {
             const repoUrl = token ? `https://${token}@github.com/${repo}` : `https://github.com/${repo}`;
             yield exec.exec('git', ['clone', repoUrl, localPath]);
             if (ref) {
-                yield exec.exec('git', ['checkout', ref]);
+                yield exec.exec('git', ['checkout', ref], { cwd: localPath });
             }
             core.saveState(`invoke-action-${action}`, localPath);
             core.endGroup();

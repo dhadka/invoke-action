@@ -38,7 +38,7 @@ export async function setupAction(): Promise<string> {
     await exec.exec('git', ['clone', repoUrl, localPath])
 
     if (ref) {
-      await exec.exec('git', ['checkout', ref])
+      await exec.exec('git', ['checkout', ref], { cwd: localPath })
     }
 
     core.saveState(`invoke-action-${action}`, localPath)
